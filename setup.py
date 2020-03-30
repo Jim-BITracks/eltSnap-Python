@@ -13,10 +13,10 @@ with pathlib.Path('requirements.txt').open() as requirements_txt:
 setuptools.setup(
     name='eltsnap',
     url='https://github.com/Jim-BITracks/eltSnap-Python.git',
-    author='Jim Miller',
-    version='0.0.1',
+    author='BITracks',
+    version='0.0.3',
     license='MIT license',
-    description='Third version test',
+    description='Library for managing projects and packages of the eltsnap application',
     packages=['eltsnap'],
     package_dir={'eltsnap': 'eltsnap'},
     package_data={'eltsnap': ['html/*', 'html/bootstrap-4.3.1-dist/css/*',
