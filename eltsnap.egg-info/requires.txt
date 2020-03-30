@@ -1,3 +1,0 @@
-pyodbc
-jinja2
-tabulate

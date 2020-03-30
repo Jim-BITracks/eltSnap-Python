@@ -1,1 +1,1 @@
-#Package made for controling fuctions of the eltSnap product
+#Package made for controlling fuctions of the eltSnap product
