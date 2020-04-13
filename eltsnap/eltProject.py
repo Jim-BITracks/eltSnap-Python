@@ -6,6 +6,11 @@ import webbrowser
 def open_webbrowser(filename):
     url = webbrowser.open(filename, new=2)
 
+def generate_html_report(server_name, database_name):
+    create_html(server_name, database_name)
+
+
+
 def create_project(server_name, database_name, GIVE_YOUR_PROJECT_A_NAME, SELECT_A_TEMPLATE_GROUP):
     if GIVE_YOUR_PROJECT_A_NAME == 'project name':
         raise ValueError("Can't name cloned project as new project name.")

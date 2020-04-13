@@ -326,13 +326,13 @@ def clone_execute_process_package(server_name, database_name, package_name, new_
         print(f"Succesfully cloned project with qualifier {new_package_name} !")
         create_html(server_name, database_name, new_package_name, command_type="execute_process")
 
-def create_execute_SQL_package(server_name, database_name, package_qualifier, connection_name_source,
-                             query, is_expression, return_row_count):
+def create_execute_SQL_package(server_name, database_name,connection_name_source,
+                             query, package_qualifier, is_expression, return_row_count):
 
     if is_expression.strip() == '' or is_expression == 'is_expression(default 0)':
         is_expression = 0
 
-    if return_row_count.strip() == '' or is_expression == 'return_row_count(default 0)':
+    if return_row_count.strip() == '' or return_row_count == 'return row count(default 0)':
         return_row_count = 0
 
     @contextmanager
@@ -350,10 +350,9 @@ def create_execute_SQL_package(server_name, database_name, package_qualifier, co
     try:
         with connection() as conn:
             curr = conn.cursor()
-            params = (package_qualifier, connection_name_source,
-                      query, is_expression, return_row_count)
+            params = (connection_name_source, query, package_qualifier,'', 0, '', is_expression, return_row_count)
 
-            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Execute SQL Package] ?, ?, ?, ?, ?"
+            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Execute SQL Package] ?, ?, ?, ?, ?, ?, ?, ?"
             curr.execute(CreateProjectCommand, params, )
             val = curr.fetchall()[0][0]
     except pyodbc.Error as e:
