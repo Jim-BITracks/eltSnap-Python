@@ -14,7 +14,7 @@ setuptools.setup(
     name='eltsnap',
     url='https://github.com/Jim-BITracks/eltSnap-Python.git',
     author='BITracks',
-    version='0.0.3',
+    version='0.0.4',
     license='MIT license',
     description='Library for managing projects and packages of the eltsnap application',
     packages=['eltsnap'],

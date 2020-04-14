@@ -260,7 +260,7 @@ def clone_foreach_dataflow_package(server_name, database_name, package_name, new
 def create_execute_process_package(server_name, database_name, package_qualifier, executable_expression,
                              arguments_expession, working_directory, place_values_in_ELT_Data, command="regular"):
 
-    if place_values_in_ELT_Data.strip() == '' or place_values_in_ELT_Data == 'place values in ELT_Data default(0)':
+    if place_values_in_ELT_Data.strip() == '' or place_values_in_ELT_Data.strip() == 'place values in ELT_Data default(0)':
         place_values_in_ELT_Data = 0
 
 
@@ -400,7 +400,7 @@ def create_foreach_execute_sql_package(server_name, database_name, foreach_conne
     if is_expression.strip() == '' or is_expression == 'is_expression(default 0)':
         is_expression = 0
 
-    if return_row_count.strip() == '' or is_expression == 'return_row_count(default 0)':
+    if return_row_count.strip() == '' or return_row_count == 'return row count(default 0)':
         return_row_count = 0
 
     @contextmanager
