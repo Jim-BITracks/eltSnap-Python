@@ -6,6 +6,11 @@ import webbrowser
 def open_webbrowser(filename):
     url = webbrowser.open(filename, new=2)
 
+def generate_html_report(server_name, database_name):
+    create_html(server_name, database_name)
+
+
+
 def create_project(server_name, database_name, GIVE_YOUR_PROJECT_A_NAME, SELECT_A_TEMPLATE_GROUP):
     if GIVE_YOUR_PROJECT_A_NAME == 'project name':
         raise ValueError("Can't name cloned project as new project name.")
@@ -73,7 +78,7 @@ def create_data_connection(server_name, database_name, connection_name_to_save, 
         print("Something got wrong")
         return
 
-    if val:
+    if val > -1:
         print(f"Succesfully created data connection {connection_name_to_save}!")
         create_html(server_name, database_name, connection_name_to_save, command_type="connection")
 
@@ -221,7 +226,7 @@ def rename_project(server_name, database_name, Select_Project, New_Project_Name)
             yield cnxn
 
         except Exception as e:
-            print(e)
+            raise RuntimeError("Check your inputs validity")
     val = 0
     try:
         with connection() as conn:
@@ -230,9 +235,11 @@ def rename_project(server_name, database_name, Select_Project, New_Project_Name)
             curr.execute(CreateProjectCommand)
             proje_id, tmp_group = curr.fetchall()[0]
     except pyodbc.Error as e:
-        print(e)
+        print("Doublecheck your database values")
     except NameError as ne:
         print("Such Project name does not exist inside our database.")
+    except Exception as e:
+        raise (e)
 
     try:
         with connection() as conn:
@@ -247,7 +254,6 @@ def rename_project(server_name, database_name, Select_Project, New_Project_Name)
 
     if val is None:
         print(f"Error ! Check your input parameters!")
-        return
     else:
         print(f"Renamed project successfully to {New_Project_Name} !")
         create_html(server_name, database_name, New_Project_Name)

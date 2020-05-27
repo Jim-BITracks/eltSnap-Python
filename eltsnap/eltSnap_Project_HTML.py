@@ -23,7 +23,7 @@ def render(server_name, database_name, PATH):
 
     with connection() as conn:
         curr = conn.cursor()
-        get_projects = "SELECT TOP(1000)[project_name] FROM[eltsnap_v2].[elt].[project]"
+        get_projects = "SELECT TOP(1000)[project_name] FROM [elt].[project]"
         curr.execute(get_projects)
         c = curr.fetchall()
         project_set = [proj[0] for proj in c]
@@ -46,7 +46,7 @@ def render(server_name, database_name, PATH):
         # DF ppackage
         curr = conn.cursor()
         DataFlowPackage_ = "SELECT [src_connection],[src_query],[is_expression],[dst_connection] ,[dst_schema] ,[dst_table] ,[dst_truncate] ,[keep_identity] ,[package_name],[use_bulk_copy], [batch_size]" \
-                           "  FROM [eltsnap_v2].[elt].[package_config_data_flow]"
+                           "  FROM [elt].[package_config_data_flow]"
         curr.execute(DataFlowPackage_)
         c = curr.fetchall()
         DF_table = c
@@ -56,7 +56,7 @@ def render(server_name, database_name, PATH):
 
         curr = conn.cursor()
         ForEachDF_ = "SELECT [foreach_connection] ,[foreach_query_expr],[src_connection],[src_query_expr],[dst_connection],[dst_schema],[dst_table],[dst_truncate],[keep_identity],[package_name]" \
-                     ",[use_bulk_copy],[batch_size] FROM [eltsnap_v2].[elt].[package_config_foreach_data_flow]"
+                     ",[use_bulk_copy],[batch_size] FROM [elt].[package_config_foreach_data_flow]"
         curr.execute(ForEachDF_)
         c = curr.fetchall()
         ForEachDF = c
@@ -74,7 +74,7 @@ def render(server_name, database_name, PATH):
         # EXProc package
 
         curr = conn.cursor()
-        ExecProc_ = "SELECT [executable_expr],[arguments_expr],[working_directory],[place_values_in_ELT_Data],[package_name] FROM [eltsnap_v2].[elt].[package_config_execute_process]"
+        ExecProc_ = "SELECT [executable_expr],[arguments_expr],[working_directory],[place_values_in_ELT_Data],[package_name] FROM [elt].[package_config_execute_process]"
         curr.execute(ExecProc_)
         c = curr.fetchall()
         ExecProc = c
@@ -83,7 +83,7 @@ def render(server_name, database_name, PATH):
         # JSONTT package
 
         curr = conn.cursor()
-        JSONtt_ = "SELECT [src_connection] ,[table_selection_option],[table_list],[flat_file_connection],[dst_connection],[package_name] FROM [eltsnap_v2].[elt].[package_config_json_table_transfer]"
+        JSONtt_ = "SELECT [src_connection] ,[table_selection_option],[table_list],[flat_file_connection],[dst_connection],[package_name] FROM [elt].[package_config_json_table_transfer]"
         curr.execute(JSONtt_)
         c = curr.fetchall()
         JSONtt = c
@@ -92,7 +92,7 @@ def render(server_name, database_name, PATH):
         # SS data package
 
         curr = conn.cursor()
-        SemiS_ = "SELECT [src_connection],[dst_connection],[dst_schema],[dst_tables_init_option],[package_name] FROM [eltsnap_v2].[elt].[package_config_semi_struct_load]"
+        SemiS_ = "SELECT [src_connection],[dst_connection],[dst_schema],[dst_tables_init_option],[package_name] FROM [elt].[package_config_semi_struct_load]"
         curr.execute(SemiS_)
         c = curr.fetchall()
         SemiS = c
@@ -100,10 +100,39 @@ def render(server_name, database_name, PATH):
     with connection() as conn:
         # FEXSQL package
         curr = conn.cursor()
-        ForEachSQL_ = "SELECT [foreach_connection],[foreach_query_expr],[query_connection],[query],[return_row_count],[package_name] FROM [eltsnap_v2].[elt].[package_config_foreach_execute_sql]"
+        ForEachSQL_ = "SELECT [foreach_connection],[foreach_query_expr],[query_connection],[query],[return_row_count],[package_name] FROM [elt].[package_config_foreach_execute_sql]"
         curr.execute(ForEachSQL_)
         c = curr.fetchall()
         ForEachSQL = c
+
+    param_projects = defaultdict(list)
+    with connection() as conn:
+        curr = conn.cursor()
+        param_side_ = "SELECT [parameter_name], [parameter_value], [parameter_reference], [parameter_type], [key_vault_name], [is_sensitive] FROM [elt].[parameter]"
+        curr.execute(param_side_)
+        params_build = curr.fetchall()
+        param_side = [c[0] for c in params_build]
+        parameters_values = [(c[0], c[1], c[2], c[3], c[4], c[5]) for c in params_build]
+
+        for i in param_side:
+            param_pro = f"SELECT * FROM [elt].[show projects using parameter] ('{i}')"
+            curr.execute(param_pro)
+            c = curr.fetchall()
+            projs = [c[0] for c in c]
+            [param_projects[i].append(c2) for c2 in projs]
+
+    # parameters projects
+
+    envs_project_paramters = defaultdict(list)
+    with connection() as conn:
+        curr = conn.cursor()
+        for project_name in project_set:
+            get_environments_and_params = "SET NOCOUNT ON EXEC [py].[get project parameters without sensitive] @environment_name=? , @project_name=?"
+            values = ('', project_name)
+            curr.execute(get_environments_and_params, values, )
+            c = curr.fetchall()
+            c1 = [p for p in c]
+            envs_project_paramters[project_name].append(c1)
 
     # project_enviroments
     enviroment_project = defaultdict(list)
@@ -114,15 +143,6 @@ def render(server_name, database_name, PATH):
         c = curr.fetchall()
         for e in c:
             enviroment_project[e[0]].append(e[1])
-    # print(env_side)
-    # exit()
-    # pprint(enviroment_project)
-    # exit()
-    # for i,j in enviroment_project.items():
-    #     # print(i,j)
-    #     for m in j:
-    #         print(m)
-    # exit()
 
     # enviroments data details
     enviroments = defaultdict(list)
@@ -232,14 +252,14 @@ def render(server_name, database_name, PATH):
 
     with connection() as conn:
         curr = conn.cursor()
-        connections_query = "SELECT  [connection_name] FROM [eltsnap_v2].[elt].[oledb_connection]"
+        connections_query = "SELECT  [connection_name] FROM [elt].[oledb_connection]"
         curr.execute(connections_query)
         c = curr.fetchall()
         connections = [m[0] for m in c]
 
     with connection() as conn:
         curr = conn.cursor()
-        connection_details_ = "SELECT [connection_name],[server_name],[database_name],[provider],[connection_expression] FROM [eltsnap_v2].[elt].[oledb_connection]"
+        connection_details_ = "SELECT [connection_name],[server_name],[database_name],[provider],[connection_expression] FROM [elt].[oledb_connection]"
         curr.execute(connection_details_)
         c = curr.fetchall()
         connection_details = c
@@ -297,12 +317,16 @@ def render(server_name, database_name, PATH):
             ForEachSQL=ForEachSQL,
             connections=connections,
             connection_details=connection_details,
+            envs_project_paramters=envs_project_paramters,
             conns_projects=conns_projects,
             conns_packages=conns_packages,
             enviroment_project=enviroment_project,
             enviroments=enviroments,
             environ_package_columns=environ_package_columns,
             env_side=env_side,
+            param_side=param_side,
+            param_projects=param_projects,
+            parameters_values=parameters_values,
             envs_build=envs_build,
             proj_per_env=proj_per_env,
             JSONtt=JSONtt,

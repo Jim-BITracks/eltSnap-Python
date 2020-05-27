@@ -7,7 +7,7 @@ import datetime
 from tabulate import tabulate
 from .eltSnap_Project_HTML import render
 
-def create_html(server_name, database_name, proj_name, command_type ="regular"):
+def create_html(server_name, database_name, proj_name ="", command_type ="regular"):
     @contextmanager
     def connection():
         try:
@@ -24,19 +24,19 @@ def create_html(server_name, database_name, proj_name, command_type ="regular"):
             curr = conn.cursor()
             #Create new Project
             if command_type == "regular":
-                new_project = f"SELECT TOP 20 [project_id],[project_name],[build_template_group] FROM [elt].project order by [project_name] "
+                new_project = f"SELECT  [project_id],[project_name],[build_template_group] FROM [elt].project order by [project_name] "
             elif command_type == "connection":
-                new_project = f"SELECT TOP (20) [connection_name],[server_name],[database_name],[provider],[custom_connect_string] FROM [elt].[oledb_connection] order by [connection_name] desc"
+                new_project = f"SELECT [connection_name],[server_name],[database_name],[provider],[custom_connect_string] FROM [elt].[oledb_connection] order by [connection_name] desc"
             elif command_type == "data_flow":
-                new_project = f"SELECT TOP (20) * FROM [elt].[package_config_data_flow]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_data_flow]"
             elif command_type == "foreach_data_flow":
-                new_project = f"SELECT TOP (20) * FROM [elt].[package_config_foreach_data_flow]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_foreach_data_flow]"
             elif command_type == "execute_process":
-                new_project = f"SELECT TOP (20) * FROM [elt].[package_config_execute_process]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_execute_process]"
             elif command_type == "execute_sql":
-                new_project = f"SELECT TOP (20) * FROM [elt].[package_config_execute_sql]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_execute_sql]"
             elif command_type == "foreach_execute_sql":
-                new_project = f"SELECT TOP (20) * FROM [elt].[package_config_foreach_execute_sql]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_foreach_execute_sql]"
 
             curr.execute(new_project)
             resultSet_ = curr.fetchall()

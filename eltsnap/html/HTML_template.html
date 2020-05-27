@@ -86,6 +86,34 @@
                     {% endfor %}
                     </tbody>
                 </table>
+
+
+                {% for project_name, parameter_lists in envs_project_paramters.items() %}
+                {% if (project_name == p_name) %}
+
+                <table id="tabela6" class="table table-bordered w-auto">
+                    <thead>
+                    <span id="d-block-inner" class="d-block p-2 bg-primary text-white"> Project Parameters </span>
+                    <th class="table" scope="col">param name</th>
+                    <th class="table" scope="col">param value</th>
+                    <th class="table" scope="col">parameter reference</th>
+                    </thead>
+                    <tbody>
+                    {% for params in parameter_lists %}
+                    {% for param in params %}
+                    <tr>
+                        <td > {{ param[0] }} </td>
+                        <td > <a href="#{{ params[2] }}">{{ param[1] }} </a></td>
+                        <td > {{ param[2] }} </td>
+
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% endif %}
+                {% endfor %}
                 {% endfor %}
             </div>
             <br>
@@ -118,7 +146,6 @@
                 {% endfor %}
             </div>
 
-
             <br>
             <h2 id="enviro">List of Enviroments per Project</h2>
             <br>
@@ -148,7 +175,64 @@
 
             </div>
             <!--</div>-->
-            <!--<div class="container">-->
+            <!--<div class="container"> Parameters space-->
+            <br>
+            <h2>Parameter details</h2>
+            <br>
+            <div>
+                {% for param_name, project_list in param_projects.items() %}
+                <br>
+                <br>
+                {% for param_vals in parameters_values %}
+                {% if (param_vals[0] == param_name) %}
+                <a id = "Parameter name:{{ param_name }}"> <span class="d-block p-2 bg-primary text-white">Parameter name: {{ param_name }}</span> </a>
+                <table id="tabela7" class="table table-bordered w-auto ">
+                    <thead>
+                    <th class="table" scope="col">parameter value</th>
+                    <th class="table" scope="col">parameter reference</th>
+                    <th class="table" scope="col">parameter type</th>
+                    <th class="table" scope="col">key-vault name</th>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td > {{ param_vals[1]  }} </td>
+                        <td > {{ param_vals[2]  }} </td>
+                        <td > {{ param_vals[3]  }} </td>
+                        <td > {{ param_vals[4]  }} </td>
+                    </tr>
+                    </tbody>
+
+
+                </table>
+
+
+
+                <table id="tabela8" class="table table-bordered w-auto ">
+                    <thead>
+                    <span id="d-block-inner" class="d-block p-2 bg-primary text-white">Projects containing the Parameter</span>
+                    <th class="table" scope="col">project name</th>
+                    </thead>
+                    <tbody>
+                    {% for pack_list_ in project_list %}
+                    <tr>
+                        <td > <a href="#{{ pack_list_ }}">{{ pack_list_ }} </a></td>
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+                                                                                    {% endif %}
+
+                                                                            {% endfor %}
+
+                                                                            {% endfor %}
+
+
+            </div>
+
+
+
             <br>
             <h2>Enviroments details</h2>
             <br>
@@ -183,6 +267,7 @@
 
                                 <table id="tabela4" class="table table-bordered w-auto ">
                     <thead>
+
                     <span id="d-block-inner" class="d-block p-2 bg-primary text-white">Projects containing the Enviroment</span>
                     <th class="table" scope="col">project name</th>
                     </thead>
@@ -219,7 +304,8 @@
                     <th class="table" scope="col">server_name</th>
                     <th class="table" scope="col">database_name</th>
                     <th class="table" scope="col">provider</th>
-                    <th class="table" scope="col">connection_expression</th></thead>
+                    <th class="table" scope="col">connection_expression</th>
+                    </thead>
                     <tbody>
                     <tr><td > {{ con_details[1] }} </td><td > {{ con_details[2] }} </td><td > {{ con_details[3] }} </td><td > {{ con_details[4]  }} </td></tr></tbody></table>
                 {% for pr_name, pack_list_outer in conns_packages.items() %}
@@ -299,6 +385,21 @@
                         {% endfor %}
                     </ul>
                 </li>
+
+                <li class="active">
+                    <a href="#parametersSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Parameters</a>
+                    <ul class="collapse list-unstyled" id="parametersSubmenu">
+                              {% for param in param_side %}
+                        <li>
+                            <a href="#Parameter name:{{ param }}">{{ param }}</a>
+                        </li>
+                                {% endfor %}
+
+                    </ul>
+                </li>
+
+
+
                                     <li class="active">
                     <a href="#enviromentSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Enviroments</a>
                     <ul class="collapse list-unstyled" id="enviromentSubmenu">
@@ -703,8 +804,4 @@
 
 
 </body>
-
-<style>
-
-</style>
 </html>
