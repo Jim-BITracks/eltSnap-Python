@@ -5,7 +5,7 @@ from .create import create_html
 
 
 def create_dataflow_package (server_name, database_name, connection_name_source, query, is_expression, package_qualifier, destination_connection,
-                             destination_schema, destination_table, destination_truncate, keep_identity, use_bulk_copy, batch_size, command="regular"):
+                             destination_schema, destination_table, destination_truncate, keep_identity, use_bulk_copy, project_name, batch_size, command="regular"):
     if is_expression.strip() == '' or is_expression == 'is_expression(default 0)':
         is_expression = 0
 
@@ -21,6 +21,9 @@ def create_dataflow_package (server_name, database_name, connection_name_source,
     if batch_size.strip() == '' or batch_size == 'batch size default(0)':
         batch_size = 0
 
+    if project_name.strip() == '' or project_name == 'project_context default(0)':
+        project_name = 0
+
 
     @contextmanager
     def connection():
@@ -35,21 +38,40 @@ def create_dataflow_package (server_name, database_name, connection_name_source,
 
     val = 0
 
+    first, second = [f'Data Flow - {package_qualifier} - {destination_schema}.{destination_table}', f'Data Flow - {package_qualifier} - {destination_schema}.{destination_table}']
+
+    if project_name != 0:
+        try:
+            with connection() as conn:
+                curr = conn.cursor()
+                params = (project_name)
+
+                CreateProjectCommand = "SET NOCOUNT ON EXEC [py].[get project_id] ?"
+                curr.execute(CreateProjectCommand, params, )
+                project_name_ = curr.fetchall()
+                if len(project_name_) == 0:
+                    project_name =0
+                else:
+                    project_name = project_name_[0][0]
+        except pyodbc.Error as e:
+            print("Something got wrong")
+            return
+
     try:
         with connection() as conn:
             curr = conn.cursor()
             params = (connection_name_source, query,  is_expression, package_qualifier, destination_connection,
                     destination_schema, destination_table,
-                      destination_truncate, keep_identity, use_bulk_copy, batch_size)
+                      destination_truncate, keep_identity, first, second, project_name, use_bulk_copy, batch_size)
 
-            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Data Flow Package] ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Data Flow Package] ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
             curr.execute(CreateProjectCommand, params, )
             val = curr.fetchall()[0][0]
     except pyodbc.Error as e:
         print("Something got wrong")
         return
 
-    if val:
+    if val > 0:
         p_name = 'Data Flow ' + package_qualifier + ' ' + destination_table
         if command == "regular":
             print(f"Succesfully created dataflow pacakge {p_name}!")
@@ -180,11 +202,10 @@ def delete_package(server_name, database_name, package_name):
 
 def create_foreach_dataflow_package(server_name, database_name, foreach_connection,connection_name_source, foreach_query,
     query, package_qualifier, destination_connection, destination_schema, destination_table, destination_truncate,
-    keep_identity, use_bulk_copy, batch_size, command="regular"):
+    keep_identity, use_bulk_copy, project_name, batch_size, command="regular"):
 
     if destination_truncate.strip() == '' or destination_truncate == 'destination truncate default(0)':
         destination_truncate = 0
-
 
     if keep_identity.strip() == '' or keep_identity == 'keep identity default(0)':
         keep_identity = 0
@@ -194,6 +215,10 @@ def create_foreach_dataflow_package(server_name, database_name, foreach_connecti
 
     if batch_size.strip() == '' or batch_size == 'batch size default(0)':
         batch_size = 0
+
+    if project_name.strip() == '' or project_name == 'project_context default(0)':
+        project_name = 0
+
 
     @contextmanager
     def connection():
@@ -205,20 +230,41 @@ def create_foreach_dataflow_package(server_name, database_name, foreach_connecti
         except Exception as e:
             print(e)
     val = 0
+
+
+    first, second = [f'Foreach Data Flow - {package_qualifier} - {destination_table}', f'Foreach Data Flow - {package_qualifier} - {destination_table}']
+
+    if project_name != 0:
+        try:
+            with connection() as conn:
+                curr = conn.cursor()
+                params = (project_name)
+
+                CreateProjectCommand = "SET NOCOUNT ON EXEC [py].[get project_id] ?"
+                curr.execute(CreateProjectCommand, params, )
+                project_name_ = curr.fetchall()
+                if len(project_name_) == 0:
+                    project_name =0
+                else:
+                    project_name = project_name_[0][0]
+        except pyodbc.Error as e:
+            print("Something got wrong")
+            return
+
     try:
         with connection() as conn:
             curr = conn.cursor()
             params = (foreach_connection,connection_name_source, foreach_query, query, package_qualifier, destination_connection,
-                             destination_schema, destination_table, destination_truncate, keep_identity, use_bulk_copy, batch_size)
+                             destination_schema, destination_table, destination_truncate, keep_identity, first, second, project_name, use_bulk_copy, batch_size)
 
-            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Foreach Data Flow Package] ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Foreach Data Flow Package] ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
             curr.execute(CreateProjectCommand, params, )
             val = curr.fetchall()[0][0]
     except pyodbc.Error as e:
         print("Something got wrong")
         return
 
-    if val:
+    if val > 0:
         p_name = 'Foreach Data Flow ' + package_qualifier + ' ' + destination_table
         if command == "regular":
             print(f"Succesfully created foreach dataflow pacakge {p_name}!")
@@ -258,10 +304,14 @@ def clone_foreach_dataflow_package(server_name, database_name, package_name, new
 
 
 def create_execute_process_package(server_name, database_name, package_qualifier, executable_expression,
-                             arguments_expession, working_directory, place_values_in_ELT_Data, command="regular"):
+                             arguments_expession, working_directory, place_values_in_ELT_Data, project_name, command="regular"):
 
     if place_values_in_ELT_Data.strip() == '' or place_values_in_ELT_Data.strip() == 'place values in ELT_Data default(0)':
         place_values_in_ELT_Data = 0
+
+    if project_name.strip() == '' or project_name == 'project_context default(0)':
+        project_name = 0
+
 
 
 
@@ -274,24 +324,44 @@ def create_execute_process_package(server_name, database_name, package_qualifier
             yield cnxn
 
         except Exception as e:
-            print(e)
+            return
 
     val = 0
+
+    first, second = [f'Execute Process - {package_qualifier}', f'Execute Process - {package_qualifier}']
+
+
+    if project_name != 0:
+        try:
+            with connection() as conn:
+                curr = conn.cursor()
+                params = (project_name)
+
+                CreateProjectCommand = "SET NOCOUNT ON EXEC [py].[get project_id] ?"
+                curr.execute(CreateProjectCommand, params, )
+                project_name_ = curr.fetchall()
+                if len(project_name_) == 0:
+                    project_name =0
+                else:
+                    project_name = project_name_[0][0]
+        except pyodbc.Error as e:
+            print("Something got wrong")
+            return
 
     try:
         with connection() as conn:
             curr = conn.cursor()
             params = (package_qualifier, executable_expression,
-                       arguments_expession, working_directory, place_values_in_ELT_Data)
+                       arguments_expession, working_directory, place_values_in_ELT_Data, first, second, project_name)
 
-            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Execute Process Package] ?, ?, ?, ?, ?"
+            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Execute Process Package] ?, ?, ?, ?, ?, ?, ?, ?"
             curr.execute(CreateProjectCommand, params, )
             val = curr.fetchall()[0][0]
     except pyodbc.Error as e:
         print("Something got wrong")
         return
 
-    if val:
+    if val >= 0:
         p_name = 'Execute Process ' + package_qualifier
         print(f"Succesfully created Execute Process pacakge {p_name}!")
         create_html(server_name, database_name, p_name, command_type="execute_process")
@@ -322,18 +392,21 @@ def clone_execute_process_package(server_name, database_name, package_name, new_
     except pyodbc.Error as e:
         print(e)
 
-    if val > 0:
+    if val >= 0:
         print(f"Succesfully cloned project with qualifier {new_package_name} !")
         create_html(server_name, database_name, new_package_name, command_type="execute_process")
 
-def create_execute_SQL_package(server_name, database_name,connection_name_source,
-                             query, package_qualifier, is_expression, return_row_count):
+def create_execute_sql_package(server_name, database_name,connection_name_source,
+                             query, package_qualifier, is_expression, return_row_count, project_name):
 
     if is_expression.strip() == '' or is_expression == 'is_expression(default 0)':
         is_expression = 0
 
     if return_row_count.strip() == '' or return_row_count == 'return row count(default 0)':
         return_row_count = 0
+
+    if project_name.strip() == '' or project_name == 'project_context default(0)':
+        project_name = 0
 
     @contextmanager
     def connection():
@@ -345,12 +418,33 @@ def create_execute_SQL_package(server_name, database_name,connection_name_source
 
         except Exception as e:
             print(e)
+            exit(1)
     val = 0
+
+    first, second = [f'Execute SQL - {package_qualifier}', f'Execute SQL - {package_qualifier}']
+
+
+    if project_name != 0:
+        try:
+            with connection() as conn:
+                curr = conn.cursor()
+                params = (project_name)
+
+                CreateProjectCommand = "SET NOCOUNT ON EXEC [py].[get project_id] ?"
+                curr.execute(CreateProjectCommand, params, )
+                project_name_ = curr.fetchall()
+                if len(project_name_) == 0:
+                    project_name =0
+                else:
+                    project_name = project_name_[0][0]
+        except pyodbc.Error as e:
+            print("Something got wrong")
+            return
 
     try:
         with connection() as conn:
             curr = conn.cursor()
-            params = (connection_name_source, query, package_qualifier,'', 0, '', is_expression, return_row_count)
+            params = (connection_name_source, query, package_qualifier, first, project_name, second, is_expression, return_row_count)
 
             CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Execute SQL Package] ?, ?, ?, ?, ?, ?, ?, ?"
             curr.execute(CreateProjectCommand, params, )
@@ -359,12 +453,13 @@ def create_execute_SQL_package(server_name, database_name,connection_name_source
         print("Something got wrong")
         return
 
-    if val:
+
+    if val > 0:
         p_name = 'Execute SQL ' + package_qualifier
         print(f"Succesfully created Execute SQL pacakge {p_name}!")
         create_html(server_name, database_name, p_name, command_type="execute_sql")
 
-def clone_execute_SQL_package(server_name, database_name, package_name, new_package_qualifier):
+def clone_execute_sql_package(server_name, database_name, package_name, new_package_qualifier):
 
     @contextmanager
     def connection():
@@ -395,13 +490,17 @@ def clone_execute_SQL_package(server_name, database_name, package_name, new_pack
 
 
 def create_foreach_execute_sql_package(server_name, database_name, foreach_connection, connection_name_source,
-                               foreach_query, query, package_qualifier, is_expression, return_row_count, command="regular"):
+                               foreach_query, query, package_qualifier, is_expression, return_row_count, project_name, command="regular"):
 
     if is_expression.strip() == '' or is_expression == 'is_expression(default 0)':
         is_expression = 0
 
     if return_row_count.strip() == '' or return_row_count == 'return row count(default 0)':
         return_row_count = 0
+
+    if project_name.strip() == '' or project_name == 'project_context default(0)':
+        project_name = 0
+
 
     @contextmanager
     def connection():
@@ -416,20 +515,41 @@ def create_foreach_execute_sql_package(server_name, database_name, foreach_conne
 
     val = 0
 
+    first, second = [f'Foreach Execute SQL - {package_qualifier}', f'Foreach Execute SQL - {package_qualifier}']
+
+
+    if project_name != 0:
+        try:
+            with connection() as conn:
+                curr = conn.cursor()
+                params = (project_name)
+
+                CreateProjectCommand = "SET NOCOUNT ON EXEC [py].[get project_id] ?"
+                curr.execute(CreateProjectCommand, params, )
+                project_name_ = curr.fetchall()
+                if len(project_name_) == 0:
+                    project_name =0
+                else:
+                    project_name = project_name_[0][0]
+        except pyodbc.Error as e:
+            print("Something got wrong")
+            return
+
+
     try:
         with connection() as conn:
             curr = conn.cursor()
             params = (foreach_connection, connection_name_source,
-                    foreach_query, query, package_qualifier, is_expression, return_row_count)
+                    foreach_query, query, package_qualifier, is_expression, return_row_count, first, second, project_name)
 
-            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Foreach Execute SQL Package] ?, ?, ?, ?, ?, ?, ?"
+            CreateProjectCommand = "SET NOCOUNT ON EXEC [elt].[Save Foreach Execute SQL Package] ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
             curr.execute(CreateProjectCommand, params, )
             val = curr.fetchall()[0][0]
     except pyodbc.Error as e:
         print("Something got wrong")
         return
 
-    if val:
+    if val >= 0:
         p_name = 'Foreach Execute SQL ' + package_qualifier
         if command == "regular":
             print(f"Succesfully created foreach execute SQL pacakge {p_name}!")
@@ -438,7 +558,7 @@ def create_foreach_execute_sql_package(server_name, database_name, foreach_conne
         create_html(server_name, database_name, p_name, command_type="foreach_execute_sql")
 
 
-def clone_foreach_execute_SQL_package(server_name, database_name, package_name, new_package_qualifier):
+def clone_foreach_execute_sql_package(server_name, database_name, package_name, new_package_qualifier):
 
     @contextmanager
     def connection():

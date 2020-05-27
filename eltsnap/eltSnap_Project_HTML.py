@@ -105,6 +105,35 @@ def render(server_name, database_name, PATH):
         c = curr.fetchall()
         ForEachSQL = c
 
+    param_projects = defaultdict(list)
+    with connection() as conn:
+        curr = conn.cursor()
+        param_side_ = "SELECT [parameter_name], [parameter_value], [parameter_reference], [parameter_type], [key_vault_name], [is_sensitive] FROM [elt].[parameter]"
+        curr.execute(param_side_)
+        params_build = curr.fetchall()
+        param_side = [c[0] for c in params_build]
+        parameters_values = [(c[0], c[1], c[2], c[3], c[4], c[5]) for c in params_build]
+
+        for i in param_side:
+            param_pro = f"SELECT * FROM [elt].[show projects using parameter] ('{i}')"
+            curr.execute(param_pro)
+            c = curr.fetchall()
+            projs = [c[0] for c in c]
+            [param_projects[i].append(c2) for c2 in projs]
+
+    # parameters projects
+
+    envs_project_paramters = defaultdict(list)
+    with connection() as conn:
+        curr = conn.cursor()
+        for project_name in project_set:
+            get_environments_and_params = "SET NOCOUNT ON EXEC [py].[get project parameters without sensitive] @environment_name=? , @project_name=?"
+            values = ('', project_name)
+            curr.execute(get_environments_and_params, values, )
+            c = curr.fetchall()
+            c1 = [p for p in c]
+            envs_project_paramters[project_name].append(c1)
+
     # project_enviroments
     enviroment_project = defaultdict(list)
     with connection() as conn:
@@ -114,15 +143,6 @@ def render(server_name, database_name, PATH):
         c = curr.fetchall()
         for e in c:
             enviroment_project[e[0]].append(e[1])
-    # print(env_side)
-    # exit()
-    # pprint(enviroment_project)
-    # exit()
-    # for i,j in enviroment_project.items():
-    #     # print(i,j)
-    #     for m in j:
-    #         print(m)
-    # exit()
 
     # enviroments data details
     enviroments = defaultdict(list)
@@ -297,12 +317,16 @@ def render(server_name, database_name, PATH):
             ForEachSQL=ForEachSQL,
             connections=connections,
             connection_details=connection_details,
+            envs_project_paramters=envs_project_paramters,
             conns_projects=conns_projects,
             conns_packages=conns_packages,
             enviroment_project=enviroment_project,
             enviroments=enviroments,
             environ_package_columns=environ_package_columns,
             env_side=env_side,
+            param_side=param_side,
+            param_projects=param_projects,
+            parameters_values=parameters_values,
             envs_build=envs_build,
             proj_per_env=proj_per_env,
             JSONtt=JSONtt,

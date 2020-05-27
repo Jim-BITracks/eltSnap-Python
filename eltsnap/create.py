@@ -28,15 +28,15 @@ def create_html(server_name, database_name, proj_name ="", command_type ="regula
             elif command_type == "connection":
                 new_project = f"SELECT [connection_name],[server_name],[database_name],[provider],[custom_connect_string] FROM [elt].[oledb_connection] order by [connection_name] desc"
             elif command_type == "data_flow":
-                new_project = f"SELECT * FROM [elt].[package_config_data_flow]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_data_flow]"
             elif command_type == "foreach_data_flow":
-                new_project = f"SELECT * FROM [elt].[package_config_foreach_data_flow]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_foreach_data_flow]"
             elif command_type == "execute_process":
-                new_project = f"SELECT * FROM [elt].[package_config_execute_process]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_execute_process]"
             elif command_type == "execute_sql":
-                new_project = f"SELECT * FROM [elt].[package_config_execute_sql]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_execute_sql]"
             elif command_type == "foreach_execute_sql":
-                new_project = f"SELECT * FROM [elt].[package_config_foreach_execute_sql]"
+                new_project = f"SELECT TOP 10 * FROM [elt].[package_config_foreach_execute_sql]"
 
             curr.execute(new_project)
             resultSet_ = curr.fetchall()
