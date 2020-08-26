@@ -146,6 +146,7 @@ def render(server_name, database_name, PATH):
 
     # enviroments data details
     enviroments = defaultdict(list)
+    environ_package_columns = []
     with connection() as conn:
         curr = conn.cursor()
         env_side_ = "SELECT [environment_name],[build_template_group] FROM [elt].[environment]"
